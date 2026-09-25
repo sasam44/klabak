@@ -656,7 +656,13 @@ export function App() {
                     className={`kl-charm ${owned ? 'owned' : ''}`}
                     title={`${charm.prize} — ${cab.name}${count > 1 ? ` · pulled ${count}×` : ''}`}
                   >
-                    <span className={`kl-charm-dot t${charm.tier}`} />
+                    {/* the shelf shows the same illustrated capsule the machine does,
+                        dimmed until that charm has actually been pulled */}
+                    <img
+                      className={`kl-charm-ball ${owned ? 'owned' : ''}`}
+                      src={`/art/capsule-${['teal', 'violet', 'gold'][charm.cabinet] ?? 'teal'}.webp`}
+                      alt=""
+                    />
                     <span className="kl-charm-name">{owned ? charm.prize : '· · ·'}</span>
                     <span className="kl-charm-cab">{count > 1 ? `×${count}` : ''}</span>
                   </div>

@@ -31,9 +31,13 @@ html, body { height: 100%; }
 
 body {
   margin: 0;
+  /* Illustrated arcade hall, dimmed hard: the scenery sets the mood, the numbers
+     stay legible. One image, 33 KB, so the first paint is still instant. */
   background:
+    /* scenery shows at the edges, the centre stays dark enough for white text */
+    radial-gradient(120% 92% at 50% 42%, rgba(11, 9, 24, 0.93) 0%, rgba(11, 9, 24, 0.82) 42%, rgba(11, 9, 24, 0.5) 100%),
     radial-gradient(1100px 480px at 50% -8%, rgba(125, 139, 255, 0.17), transparent 70%),
-    radial-gradient(700px 380px at 8% 6%, rgba(95, 208, 197, 0.07), transparent 70%),
+    url('/art/bg.webp') center / cover no-repeat fixed,
     var(--bg);
   color: var(--ink);
   font-family: var(--sans);
@@ -117,16 +121,20 @@ h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; font-weight: 650; }
 .kl-prize { animation: pop 0.4s cubic-bezier(0.2, 1.4, 0.4, 1); transform-box: fill-box; }
 @keyframes pop { from { opacity: 0; scale: 0.6; } to { opacity: 1; scale: 1; } }
 
-.kl-hud { font-family: var(--mono); font-size: 15px; letter-spacing: 0.16em; fill: var(--ink-dim); }
+.kl-hud { font-family: var(--mono); font-size: 13px; letter-spacing: 0.16em; fill: var(--ink); }
+.kl-hud-pill rect { fill: rgba(9, 7, 20, 0.72); stroke: rgba(244, 241, 255, 0.12); }
+.kl-hud-pill text { font-size: 12px; }
 .kl-hud-small { font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; fill: var(--ink-faint); }
-.kl-chip-hud rect { fill: rgba(95, 208, 197, 0.1); stroke: rgba(95, 208, 197, 0.5); }
-.kl-chip-hud text { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.1em; fill: var(--good); }
+.kl-chip-hud rect { fill: rgba(9, 7, 20, 0.78); stroke: rgba(95, 208, 197, 0.55); }
+.kl-chip-hud text { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.08em; fill: var(--good); }
 .kl-pip { fill: none; stroke: #3a3560; stroke-width: 1.4; }
 .kl-pip.on { fill: var(--hot); stroke: var(--hot); }
 
-.kl-chute-label { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.22em; fill: #6c66a0; }
+.kl-chute-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em; fill: #6c66a0; }
 .kl-plate rect { fill: #0d0b1c; stroke: #4b4477; }
-.kl-plate text { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.24em; fill: #565085; text-anchor: middle; }
+.kl-plate text { font-family: var(--mono); font-size: 13px; letter-spacing: 0.2em; fill: #b3acd6; text-anchor: middle; }
+.kl-plate rect { fill: rgba(13, 11, 28, 0.86); stroke: rgba(125, 139, 255, 0.42); }
+.kl-plate-coin rect { fill: rgba(13, 11, 28, 0.92); stroke: rgba(255, 205, 107, 0.4); }
 .kl-plate.tilt-on rect { fill: rgba(255, 122, 138, 0.13); stroke: var(--bad); }
 .kl-plate.tilt-on text { fill: var(--bad); }
 .kl-plate.tilt-on { animation: blink 0.5s steps(2) 4; }
@@ -143,7 +151,7 @@ h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; font-weight: 650; }
 /* aim strip: one invisible button per column, over the case */
 .kl-aim { position: absolute; inset: 0; pointer-events: none; }
 .kl-aim-col {
-  position: absolute; top: 28%; height: 46%;
+  position: absolute; top: 26%; height: 34%;
   background: transparent; border: 0; padding: 0; cursor: pointer; pointer-events: auto;
   border-radius: 10px; transition: background 0.2s;
 }
@@ -267,10 +275,12 @@ h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; font-weight: 650; }
   font-size: 11.5px; color: var(--ink-faint);
 }
 .kl-charm.owned { border-style: solid; border-color: rgba(255, 205, 107, 0.4); color: var(--ink); background: rgba(255, 205, 107, 0.05); }
-.kl-charm-dot { width: 9px; height: 9px; border-radius: 50%; background: #3a3560; }
-.kl-charm-dot.t1 { background: var(--t1); }
-.kl-charm-dot.t2 { background: var(--t2); }
-.kl-charm-dot.t3 { background: var(--t3); }
+.kl-charm-ball {
+  width: 17px; height: 18px; object-fit: contain;
+  opacity: 0.28; filter: grayscale(1) brightness(0.9);
+  transition: opacity 0.25s, filter 0.25s;
+}
+.kl-charm-ball.owned { opacity: 1; filter: none; }
 .kl-charm-cab { font-family: var(--mono); font-size: 10px; color: var(--hot); }
 
 /* stats strip */
@@ -441,6 +451,6 @@ h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; font-weight: 650; }
    --------------------------------------------------------------------------- */
 .kl-plate kl-plate-coin {}
 .kl-plate.readout-win rect { fill: rgba(255, 205, 107, 0.16); stroke: var(--hot); }
-.kl-plate.readout-win text { fill: var(--hot); letter-spacing: 0.1em; font-size: 11.5px; }
+.kl-plate.readout-win text { fill: #ffe1a4; letter-spacing: 0.06em; font-size: 12.5px; font-weight: 600; }
 .kl-plate.readout-slip rect { fill: rgba(255, 122, 138, 0.12); stroke: var(--bad); }
-.kl-plate.readout-slip text { fill: var(--bad); letter-spacing: 0.16em; font-size: 11.5px; }
+.kl-plate.readout-slip text { fill: #ffb0ba; letter-spacing: 0.14em; font-size: 12.5px; }

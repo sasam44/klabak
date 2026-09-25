@@ -47,15 +47,16 @@ export type ClawMachineProps = {
 const VIEW = { w: 880, h: 360 };
 /** Six capsules across — the row the claw can actually reach. */
 const COLS = 6;
-const COL_X = Array.from({ length: COLS }, (_, i) => 88 + i * 104); // 88 .. 608
-const ROW_Y = 208;
-const RADIUS = 34;
-const CASE = { x: 36, y: 62, w: 808, h: 200 };
-const RAIL = { y: 72, h: 6 };
-const REST_Y = 100;
-const LIFT_Y = 96;
+const COL_X = Array.from({ length: COLS }, (_, i) => 104 + i * 82); // 104 .. 514
+const ROW_Y = 152;
+const RADIUS = 26;
+/** The glass window as drawn in the cabinet illustration. */
+const CASE = { x: 44, y: 68, w: 792, h: 140 };
+const RAIL = { y: 86, h: 5 };
+const REST_Y = 92;
+const LIFT_Y = 90;
 const DESCEND_Y = ROW_Y - RADIUS - 6;
-const CHUTE = { x: 664, y: 190, w: 146, h: 66 };
+const CHUTE = { x: 688, y: 118, w: 132, h: 78 };
 const CHUTE_X = CHUTE.x + CHUTE.w / 2;
 
 /** Capsule colour per cabinet — identical capsules, cabinet identity. */
@@ -63,8 +64,13 @@ export const CABINET_SHELL = ['#5fd0c5', '#7d8bff', '#ffcd6b'];
 /** Prize rarity palette, shared with the paytable chips. */
 export const TIER_COLORS = ['#6f6a7d', '#5fd0c5', '#7d8bff', '#ffcd6b'];
 
-/** A gachapon capsule: coloured lower shell, pale cap, seam, gloss. */
-function Capsule({
+/**
+ * A gachapon capsule, drawn from the illustrated sprite in public/art instead of
+ * vector circles: same 68px slot, same centre, so the claw, the aim rings and the
+ * chute keep working untouched. All three cabinet colours come from one sheet, so
+ * the capsules stay identical across cabinets — which is the game's central claim.
+ */
+function CapsuleSprite({
   shell,
   scale = 1,
   dim = 1,
@@ -73,22 +79,24 @@ function Capsule({
   shell: string;
   scale?: number;
   dim?: number;
+  /** Draws the dashed "the claw will go here" ring around the capsule. */
   label?: boolean;
 }) {
+  const file = shell === CABINET_SHELL[1] ? 'violet' : shell === CABINET_SHELL[2] ? 'gold' : 'teal';
   return (
     <g transform={`scale(${scale})`} opacity={dim}>
-      <circle cx="0" cy="0" r="34" fill={shell} fillOpacity="0.92" />
-      <path d="M-34 0 A 34 34 0 0 1 34 0 Z" fill="#ffffff" fillOpacity="0.36" />
-      <path d="M-34 0 A 34 34 0 0 0 34 0 Z" fill="#000000" fillOpacity="0.22" />
-      <circle cx="0" cy="0" r="34" fill="none" stroke="#0d0b17" strokeWidth="1.8" opacity="0.42" />
-      <path d="M-33 0 H33" stroke="#0d0b17" strokeWidth="2" opacity="0.45" strokeLinecap="round" />
-      <rect x="-8" y="-41" width="16" height="8" rx="3.5" fill={shell} fillOpacity="0.85" />
-      <ellipse cx="-12" cy="-14" rx="10" ry="6" fill="#fff" opacity="0.32" />
-      <ellipse cx="0" cy="20" rx="20" ry="7" fill="#000" opacity="0.12" />
+      <image
+        href={`/art/capsule-${file}.webp`}
+        x={-37}
+        y={-40}
+        width={74}
+        height={77}
+        preserveAspectRatio="xMidYMid meet"
+      />
       {label && (
         <g className="kl-grab-mark">
           <circle cx="0" cy="0" r="42" fill="none" stroke="#ffcd6b" strokeWidth="1.6" strokeDasharray="5 7" opacity="0.75" />
-          <path d="M-10 -48 -10 -60M-10 -60 -16 -53M-10 -60 -4 -53" stroke="#ffcd6b" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+          <path d="M0 -52 V -60" stroke="#ffcd6b" strokeWidth="2.4" strokeLinecap="round" opacity="0.9" />
         </g>
       )}
     </g>
@@ -183,26 +191,24 @@ export function ClawMachine({
         {/* ---------------------------------------------------------- body */}
         <rect x="12" y="12" width="856" height="336" rx="18" fill="url(#body)" stroke="#3b3560" strokeWidth="2" />
         <rect x="12" y="12" width="856" height="42" rx="18" fill="#191533" stroke="#3b3560" strokeWidth="1.5" />
-        {Array.from({ length: 9 }).map((_, i) => (
+        {/* The cabinet itself: an illustrated cel-shaded body (public/art).
+            Everything interactive — rail, claw, capsules, chute, plates, HUD — is
+            still vector and drawn on top, so the art can be swapped without
+            touching a single line of game logic. */}
+        <image href="/art/cabinet.webp" x="0" y="0" width={VIEW.w} height={VIEW.h} preserveAspectRatio="none" />
+
+        {/* bulbs the art already draws; these are the lit overlay that twinkles */}
+        {Array.from({ length: 17 }).map((_, i) => (
           <circle
             key={i}
-            cx={352 + i * 22}
-            cy={33}
-            r="3.4"
+            cx={62 + i * 49.1}
+            cy={40}
+            r="4.6"
             fill="url(#lamp)"
             className="kl-bulb"
             style={{ animationDelay: `${(i % 6) * 0.24}s` }}
           />
         ))}
-        <text x="34" y="39" className="kl-hud">
-          PULL #{pullNumber}
-        </text>
-        <g className="kl-chip-hud">
-          <rect x={CASE.x + CASE.w - 16 - (chipLabel.length * 7.2 + 24)} y="20" width={chipLabel.length * 7.2 + 24} height="26" rx="13" />
-          <text x={CASE.x + CASE.w - 28} y="38" textAnchor="end">
-            {chipLabel}
-          </text>
-        </g>
 
         {/* ---------------------------------------------------------- case */}
         <rect x={CASE.x} y={CASE.y} width={CASE.w} height={CASE.h} rx="10" fill="#0b0a17" stroke="#4b4477" strokeWidth="2" />
@@ -221,7 +227,7 @@ export function ClawMachine({
           </text>
           {won && (
             <g transform={`translate(${CHUTE_X} ${CHUTE.y + 42}) scale(0.66)`} className="kl-prize">
-              <Capsule shell={heldShell} />
+              <CapsuleSprite shell={heldShell} />
             </g>
           )}
 
@@ -236,7 +242,7 @@ export function ClawMachine({
                 transform={`translate(${cx} ${ROW_Y})`}
                 className={`kl-capsule ${aimed ? 'aimed' : ''} ${playing ? 'playing' : ''} ${taken ? 'taken' : ''}`}
               >
-                <Capsule shell={shell} label={aimed && !inFlight} />
+                <CapsuleSprite shell={shell} label={aimed && !inFlight} />
               </g>
             );
           })}
@@ -278,26 +284,39 @@ export function ClawMachine({
           <path d={gripperOpen ? 'M0 6 L0 34' : 'M0 6 L0 28'} stroke="#9aa0c4" strokeWidth="2.8" strokeLinecap="round" />
           {holding && (
             <g transform="translate(0 68)" className={`kl-held ${phase === 'dumping' ? 'dropping' : ''}`}>
-              <Capsule shell={heldShell} scale={0.94} />
+              <CapsuleSprite shell={heldShell} scale={0.94} />
             </g>
           )}
         </g>
 
         {/* ------------------------------------------------------- plates */}
         <g className={`kl-plate ${slipped ? 'tilt-on' : ''}`}>
-          <rect x="60" y="282" width="170" height="30" rx="7" />
-          <text x="145" y="302">TILT</text>
+          <rect x="52" y="240" width="190" height="52" rx="8" />
+          <text x="147" y="272">TILT</text>
         </g>
         <g className={`kl-plate ${isJackpot ? 'jackpot-on' : ''}`}>
-          <rect x="650" y="282" width="170" height="30" rx="7" />
-          <text x="735" y="302">JACKPOT ×{Math.round(cabinet.tiers[cabinet.tiers.length - 1].multiplier / 100)}</text>
+          <rect x="630" y="240" width="198" height="52" rx="8" />
+          <text x="729" y="272">JACKPOT ×{Math.round(cabinet.tiers[cabinet.tiers.length - 1].multiplier / 100)}</text>
         </g>
         <g className={`kl-plate kl-plate-coin ${readoutWin ? 'readout-win' : ''} ${readoutTier && !readoutWin ? 'readout-slip' : ''}`}>
-          <rect x="330" y="282" width="220" height="30" rx="7" />
-          <text x="440" y="302">{readoutPlateText}</text>
+          <rect x="304" y="240" width="290" height="52" rx="8" />
+          <text x="449" y="272">{readoutPlateText}</text>
         </g>
 
-        <rect x={CASE.x} y={CASE.y} width={CASE.w} height={CASE.h} rx="10" fill="url(#glass)" className="kl-glass" />
+        <rect x={CASE.x} y={CASE.y} width={CASE.w} height={CASE.h} rx="14" fill="url(#glass)" className="kl-glass" />
+
+        {/* drawn last, so neither the rail nor the glass can cross the readouts */}
+        <g className="kl-hud-pill">
+          <rect x={CASE.x + 12} y={CASE.y + 10} width="112" height="22" rx="11" />
+          <text x={CASE.x + 26} y={CASE.y + 25} className="kl-hud">PULL #{pullNumber}</text>
+        </g>
+        <g className="kl-chip-hud">
+          <rect x={CASE.x + CASE.w - 160} y={CASE.y + 10} width="148" height="22" rx="11" />
+          <text x={CASE.x + CASE.w - 24} y={CASE.y + 25} textAnchor="end">
+            {chipLabel}
+          </text>
+        </g>
+
 
       </svg>
 
@@ -309,8 +328,8 @@ export function ClawMachine({
             type="button"
             className="kl-aim-col"
             style={{
-              left: `${((cx - 52) / VIEW.w) * 100}%`,
-              width: `${(104 / VIEW.w) * 100}%`,
+              left: `${((cx - 41) / VIEW.w) * 100}%`,
+              width: `${(82 / VIEW.w) * 100}%`,
             }}
             disabled={disabled}
             aria-label={`Aim the claw at column ${column + 1}`}
