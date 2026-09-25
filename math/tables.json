@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "game": "KlabakGame",
+  "declaredRtpPpm": 960000,
+  "probabilityScale": 1000000,
+  "multiplierScale": 100,
+  "note": "Single source of truth. Weight in ppm (sum must be exactly 1000000). Multiplier in centi-units (100 = 1.00x). Tier 0 is the slip (no prize). Not one number below is hand-written into the contract or the frontend: math/generate.py emits both and refuses to write anything if the arithmetic does not come out at exactly 960000 ppm.",
+
+  "cabinets": [
+    {
+      "id": 0,
+      "key": "penny",
+      "name": "Penny Arcade",
+      "blurb": "Fast cabinet. Small prizes, the claw slips half the time.",
+      "volatility": "low",
+      "tiers": [
+        { "tier": 0, "prize": "slip", "weight": 500000, "multiplier": 0, "charm": null },
+        { "tier": 1, "prize": "Tin Robot", "weight": 360000, "multiplier": 160, "charm": "tin-robot" },
+        { "tier": 2, "prize": "Glass Cat", "weight": 110000, "multiplier": 240, "charm": "glass-cat" },
+        { "tier": 3, "prize": "Porcelain Swan", "weight": 30000, "multiplier": 400, "charm": "porcelain-swan" }
+      ]
+    },
+    {
+      "id": 1,
+      "key": "midway",
+      "name": "Midway",
+      "blurb": "Balanced cabinet. The grip holds often enough to keep you pulling.",
+      "volatility": "medium",
+      "tiers": [
+        { "tier": 0, "prize": "slip", "weight": 780000, "multiplier": 0, "charm": null },
+        { "tier": 1, "prize": "Neon Jelly", "weight": 150000, "multiplier": 200, "charm": "neon-jelly" },
+        { "tier": 2, "prize": "Crystal Fox", "weight": 55000, "multiplier": 600, "charm": "crystal-fox" },
+        { "tier": 3, "prize": "Golden Koi", "weight": 15000, "multiplier": 2200, "charm": "golden-koi" }
+      ]
+    },
+    {
+      "id": 2,
+      "key": "vault",
+      "name": "The Vault",
+      "blurb": "One cabinet in the back. The claw almost never holds, and when it does...",
+      "volatility": "high",
+      "tiers": [
+        { "tier": 0, "prize": "slip", "weight": 735000, "multiplier": 0, "charm": null },
+        { "tier": 1, "prize": "Obsidian Beetle", "weight": 240000, "multiplier": 150, "charm": "obsidian-beetle" },
+        { "tier": 2, "prize": "Ivory Idol", "weight": 20000, "multiplier": 600, "charm": "ivory-idol" },
+        { "tier": 3, "prize": "Sunken Crown", "weight": 5000, "multiplier": 9600, "charm": "sunken-crown" }
+      ]
+    }
+  ]
+}

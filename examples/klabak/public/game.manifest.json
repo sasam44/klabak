@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "gameId": "KlabakGame",
+  "apiVersion": 1,
+  "defaultLocale": "en",
+  "locales": {
+    "en": {
+      "name": "Klabak: Gachapon Claw Machine",
+      "description": "A gachapon claw machine with three capsule cabinets. Pick a cabinet, drop the claw, and the grip decides: a slip, or a charm that pays up to \u00d796. Every cabinet returns exactly 96.00%."
+    }
+  },
+  "presentation": {
+    "mode": "full-iframe",
+    "hostPanels": {
+      "openSession": false,
+      "history": false,
+      "status": false
+    }
+  },
+  "capabilities": {
+    "openSession": true,
+    "submitAction": false,
+    "forfeitExpiredSession": false,
+    "cancelStuckRandomness": false,
+    "resize": true
+  }
+}

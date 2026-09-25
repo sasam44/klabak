@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" class="theme-dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Klabak: Gachapon Claw Machine</title>
+    <meta name="description" content="Klabak is a gachapon claw machine: three capsule cabinets, pick one, drop the claw, and the grip either slips or lifts a charm worth up to ×96. Every cabinet returns exactly 96.00%, settled on-chain through the Chain casino SDK." />
+    <link rel="canonical" href="https://klabak.vercel.app/" />
+
+    <!-- og:image so the jam gallery shows the cabinet instead of a loading screen -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Klabak: Gachapon Claw Machine" />
+    <meta property="og:description" content="Gachapon claw machine: three capsule cabinets, charms up to ×96, 96.00% RTP. Settled on-chain." />
+    <meta property="og:url" content="https://klabak.vercel.app/" />
+    <!-- absolute URLs: scrapers do not resolve relative og:image paths -->
+    <meta property="og:image" content="https://klabak.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The Klabak gachapon claw machine holding a charm inside its cabinet." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Klabak: Gachapon Claw Machine" />
+    <meta name="twitter:description" content="Gachapon claw machine: three capsule cabinets, charms up to ×96, 96.00% RTP. Settled on-chain." />
+    <meta name="twitter:image" content="https://klabak.vercel.app/og-image.png" />
+    <meta name="theme-color" content="#0d0b12" />
+
+    <!-- REQUIRED by the jam: proves the entry and powers the live play stats. -->
+    <script async src="https://jam.chain.wtf/widget.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
