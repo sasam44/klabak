@@ -1,0 +1,8 @@
+# The build runs in Vercel's image: upload sources only.
+node_modules
+**/node_modules
+examples/*/dist
+.git
+*.log
+.vercel
+shots
