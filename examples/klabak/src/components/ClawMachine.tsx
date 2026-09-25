@@ -137,6 +137,22 @@ export function ClawMachine({
   const holding = phase === 'lifting' || phase === 'dumping';
   const chipLabel = `GRAB TO WIN  ×${topX}`;
 
+  /**
+   * The machine prints its own result. The banner under the deck already reports
+   * the tier, but a player watching the claw should not have to look away to
+   * learn what they won — and a plate that reads "JACKPOT x4" must never be the
+   * only thing on screen when the grip was a x1.60. Shown while the round is
+   * settled and kept while idle, so the last prize stays readable.
+   */
+  const showReadout = outcomeTier !== null && (phase === 'settled' || phase === 'idle');
+  const readoutTier = showReadout && outcomeTier !== null ? cabinet.tiers[outcomeTier] : null;
+  const readoutWin = !!readoutTier && readoutTier.multiplier > 0;
+  const readoutPlateText = readoutTier
+    ? readoutWin
+      ? `PRIZE ×${(readoutTier.multiplier / 100).toFixed(2)} · ${readoutTier.prize}`
+      : 'SLIP · NO PRIZE'
+    : 'INSERT BET';
+
   return (
     <div className={`kl-cabinet ${phase} ${slipped ? 'is-slip' : ''} ${won ? 'is-win' : ''}`}>
       <svg viewBox={`0 0 ${VIEW.w} ${VIEW.h}`} role="img" aria-label={`${cabinet.name} claw machine`}>
@@ -276,12 +292,13 @@ export function ClawMachine({
           <rect x="650" y="282" width="170" height="30" rx="7" />
           <text x="735" y="302">JACKPOT ×{Math.round(cabinet.tiers[cabinet.tiers.length - 1].multiplier / 100)}</text>
         </g>
-        <g className="kl-plate kl-plate-coin">
+        <g className={`kl-plate kl-plate-coin ${readoutWin ? 'readout-win' : ''} ${readoutTier && !readoutWin ? 'readout-slip' : ''}`}>
           <rect x="330" y="282" width="220" height="30" rx="7" />
-          <text x="440" y="302">INSERT BET</text>
+          <text x="440" y="302">{readoutPlateText}</text>
         </g>
 
         <rect x={CASE.x} y={CASE.y} width={CASE.w} height={CASE.h} rx="10" fill="url(#glass)" className="kl-glass" />
+
       </svg>
 
       {/* aim strip: one button per column, so the claw can be placed without a drag */}

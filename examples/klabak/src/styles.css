@@ -383,6 +383,9 @@ h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; font-weight: 650; }
 .kl-win {
   position: absolute; inset: 0; z-index: 3; padding: 0; border: 0; border-radius: 20px; cursor: pointer;
   display: grid; place-items: center; overflow: hidden; color: inherit;
+  /* the plate under the glass now carries the prize; keep the overlay card
+     clear of it instead of stacking text on text */
+  padding-bottom: 42px;
   background: radial-gradient(circle at 50% 46%, rgba(28, 20, 52, 0.87) 0%, rgba(11, 9, 24, 0.93) 72%);
   animation: kl-win-in 240ms ease-out;
 }
@@ -430,3 +433,14 @@ h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; font-weight: 650; }
   .kl-win-sparks { display: none; }
   .kl-win-timer { width: 100%; }
 }
+
+/* ---------------------------------------------------------------------------
+   The centre plate is the machine's own display: it reads INSERT BET when the
+   cabinet is waiting, and the prize it actually paid once a round settles. The
+   marquee plate can never be the only thing a player reads.
+   --------------------------------------------------------------------------- */
+.kl-plate kl-plate-coin {}
+.kl-plate.readout-win rect { fill: rgba(255, 205, 107, 0.16); stroke: var(--hot); }
+.kl-plate.readout-win text { fill: var(--hot); letter-spacing: 0.1em; font-size: 11.5px; }
+.kl-plate.readout-slip rect { fill: rgba(255, 122, 138, 0.12); stroke: var(--bad); }
+.kl-plate.readout-slip text { fill: var(--bad); letter-spacing: 0.16em; font-size: 11.5px; }
