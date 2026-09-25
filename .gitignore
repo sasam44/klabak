@@ -15,3 +15,4 @@ simulator/local-node/deployed.json
 # because it publishes them separately. This submission repository tracks both on
 # purpose: `npm install` + `npm start:klabak` must work from a fresh clone, and the
 # local node loads the VRF node from local-verify-network/.
+.env*
