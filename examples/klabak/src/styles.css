@@ -21,7 +21,8 @@
   --t3: #ffcd6b;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, sans-serif;
-  --shell: 940px;
+  --shell: 900px;
+  --deck: 300px;   /* ruang untuk header + tab + deck di bawah kaca */
 }
 
 * { box-sizing: border-box; }
@@ -41,7 +42,7 @@ body {
 }
 
 code { font-family: var(--mono); font-size: 0.92em; color: var(--hot); }
-h1 { margin: 0; font-size: 19px; letter-spacing: 0.02em; font-weight: 650; }
+h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; font-weight: 650; }
 
 /* ---------------------------------------------------------------- shell */
 /* Everything lives in one centered column: no wide layouts, no long trips. */
@@ -55,11 +56,11 @@ h1 { margin: 0; font-size: 19px; letter-spacing: 0.02em; font-weight: 650; }
 }
 
 .kl-top {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 6px 2px 14px; flex-wrap: wrap;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 2px 2px 10px; flex-wrap: wrap;
 }
 .kl-brand { display: flex; align-items: center; gap: 11px; }
-.kl-mark { width: 30px; height: 30px; color: var(--hot); flex: none; }
+.kl-mark { width: 27px; height: 27px; color: var(--hot); flex: none; }
 .kl-sub { display: block; font-size: 10.5px; color: var(--ink-faint); letter-spacing: 0.13em; text-transform: uppercase; }
 .kl-top-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 
@@ -83,7 +84,14 @@ h1 { margin: 0; font-size: 19px; letter-spacing: 0.02em; font-weight: 650; }
 .kl-main { flex: 1; }
 
 /* ---------------------------------------------------------------- cabinet */
-.kl-machine { position: relative; max-width: var(--shell); margin: 0 auto; }
+/* The case is a 2.44:1 rectangle, so capping its width also caps its height:
+   on a short screen the whole machine shrinks instead of pushing the deck
+   below the fold. No zooming out required. */
+.kl-machine {
+  position: relative;
+  max-width: clamp(520px, calc((100vh - var(--deck)) * 2.44), var(--shell));
+  margin: 0 auto;
+}
 .kl-cabinet { position: relative; }
 .kl-cabinet svg { width: 100%; height: auto; display: block; }
 
@@ -130,7 +138,7 @@ h1 { margin: 0; font-size: 19px; letter-spacing: 0.02em; font-weight: 650; }
 /* aim strip: one invisible button per column, over the case */
 .kl-aim { position: absolute; inset: 0; pointer-events: none; }
 .kl-aim-col {
-  position: absolute; top: 34%; height: 36%;
+  position: absolute; top: 28%; height: 46%;
   background: transparent; border: 0; padding: 0; cursor: pointer; pointer-events: auto;
   border-radius: 10px; transition: background 0.2s;
 }
@@ -155,8 +163,8 @@ h1 { margin: 0; font-size: 19px; letter-spacing: 0.02em; font-weight: 650; }
 .kl-balance { font-family: var(--mono); font-size: 14px; font-variant-numeric: tabular-nums; }
 
 .kl-quick-btn {
-  min-width: 48px; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--panel-line); border-radius: 9px;
-  color: var(--ink-dim); padding: 9px 0; font-family: var(--mono); font-size: 13px; cursor: pointer;
+  min-width: 46px; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--panel-line); border-radius: 9px;
+  color: var(--ink-dim); padding: 8px 0; font-family: var(--mono); font-size: 13px; cursor: pointer;
   transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 .kl-quick-btn:hover:not(:disabled) { color: var(--ink); border-color: rgba(244, 241, 255, 0.3); }
@@ -169,8 +177,8 @@ h1 { margin: 0; font-size: 19px; letter-spacing: 0.02em; font-weight: 650; }
 .kl-input:focus { outline: none; border-color: var(--hot); }
 
 .kl-pull {
-  width: 100%; margin-top: 12px; padding: 19px 16px; border-radius: 12px; cursor: pointer;
-  border: 1px solid var(--hot); color: #1a1330; font-weight: 800; font-size: 16px; letter-spacing: 0.1em;
+  width: 100%; margin-top: 10px; padding: 16px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--hot); color: #1a1330; font-weight: 800; font-size: 15.5px; letter-spacing: 0.1em;
   text-transform: uppercase; background: linear-gradient(180deg, #ffe6a8, var(--hot));
   box-shadow: 0 10px 26px rgba(255, 205, 107, 0.16);
   transition: filter 0.18s, transform 0.12s;
@@ -181,16 +189,16 @@ h1 { margin: 0; font-size: 19px; letter-spacing: 0.02em; font-weight: 650; }
 
 /* result readout: in the deck, where the eye already is */
 .kl-banner {
-  margin-top: 10px; padding: 10px 14px; border-radius: 11px; text-align: center;
+  margin-top: 8px; padding: 8px 13px; border-radius: 10px; text-align: center;
   display: flex; flex-direction: column; gap: 2px;
   border: 1px solid var(--panel-line); background: rgba(0, 0, 0, 0.28);
   animation: rise 0.3s ease;
-  min-height: 54px; justify-content: center;
+  min-height: 48px; justify-content: center;
 }
 @keyframes rise { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
-.kl-banner strong { font-size: 15.5px; }
-.kl-banner span { font-size: 12px; color: var(--ink-dim); }
-.kl-banner.idle strong { color: var(--ink-dim); font-weight: 600; font-size: 13.5px; }
+.kl-banner strong { font-size: 15px; }
+.kl-banner span { font-size: 12.5px; color: var(--ink-dim); }
+.kl-banner.idle strong { color: var(--ink-dim); font-weight: 600; font-size: 13px; }
 .kl-banner.idle span { color: var(--ink-faint); }
 .kl-banner.win { border-color: rgba(255, 205, 107, 0.55); background: rgba(255, 205, 107, 0.07); }
 .kl-banner.win strong { color: var(--hot); font-size: 19px; }
@@ -200,18 +208,18 @@ h1 { margin: 0; font-size: 19px; letter-spacing: 0.02em; font-weight: 650; }
 .kl-error { font-size: 12px; color: var(--bad); margin: 10px 0 0; }
 
 /* cabinet tabs, above the case: pick the machine, then play */
-.kl-tabs { display: flex; gap: 8px; margin: 0 0 10px; flex-wrap: wrap; }
+.kl-tabs { display: flex; gap: 7px; margin: 0 0 8px; flex-wrap: wrap; }
 .kl-tab {
-  flex: 1 1 160px; text-align: left; cursor: pointer;
+  flex: 1 1 150px; text-align: left; cursor: pointer;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012));
-  border: 1px solid var(--panel-line); border-radius: 11px; padding: 9px 12px; color: var(--ink);
+  border: 1px solid var(--panel-line); border-radius: 10px; padding: 7px 11px; color: var(--ink);
   transition: border-color 0.2s, transform 0.2s, background 0.2s;
 }
 .kl-tab:hover:not(:disabled) { transform: translateY(-1px); border-color: rgba(244, 241, 255, 0.3); }
 .kl-tab.active { border-color: var(--hot); background: linear-gradient(180deg, rgba(255, 205, 107, 0.14), transparent); }
 .kl-tab:disabled { opacity: 0.5; cursor: not-allowed; }
-.kl-tab-name { display: block; font-size: 13.5px; font-weight: 600; }
-.kl-tab-meta { display: block; font-family: var(--mono); font-size: 10px; color: var(--ink-faint); margin-top: 2px; letter-spacing: 0.05em; }
+.kl-tab-name { display: block; font-size: 13px; font-weight: 600; }
+.kl-tab-meta { display: block; font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); margin-top: 2px; letter-spacing: 0.05em; }
 
 /* ---------------------------------------------------------------- lower */
 .kl-lower {
@@ -285,6 +293,10 @@ h1 { margin: 0; font-size: 19px; letter-spacing: 0.02em; font-weight: 650; }
 .kl-foot-right { font-family: var(--mono); letter-spacing: 0.1em; text-transform: uppercase; }
 
 /* --------------------------------------------------------------- narrow */
+@media (max-height: 700px) {
+  :root { --deck: 260px; }
+}
+
 @media (max-width: 720px) {
   .kl-app { padding: 10px 10px 0; }
   .kl-deck { padding: 12px; }

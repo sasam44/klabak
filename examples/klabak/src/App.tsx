@@ -409,8 +409,6 @@ export function App() {
             outcomeTier={round?.outcome?.tier ?? null}
             targetCol={round?.targetCol ?? aimCol}
             aimCol={aimCol}
-            collected={charmCount}
-            totalCharms={totalCharms}
             pullNumber={history.length + 1}
             disabled={busy || mode === 'connecting'}
             onAim={column => {

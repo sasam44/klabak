@@ -5,10 +5,13 @@ import { isSlip } from '../lib/klabak';
 /**
  * The cabinet: one SVG, no external assets, so it paints on the first frame.
  *
- * The case holds a 5x2 grid of identical capsules, the way a real gachapon
- * machine does. Identical matters: every capsule has the same chance, so the
- * picture never lies about where the prize comes from. Aiming decides where the
- * claw travels, nothing else.
+ * One row of six identical capsules. One row on purpose: the claw reaches the
+ * front row and nothing else, so the case shows exactly the capsules that can
+ * be taken. The faint shapes behind the row are the rest of the basket, drawn
+ * as background rather than as a second row of pickable-looking targets.
+ *
+ * The case is wide and short (2.4:1) so the whole machine — case plus control
+ * deck — fits a laptop viewport without zooming out.
  *
  * Animation philosophy: travel and descent are generic and reveal nothing,
  * because the outcome is not known until the session settles. Only the grip
@@ -35,48 +38,57 @@ export type ClawMachineProps = {
   targetCol: number;
   /** Column the claw rests over when nothing is in flight. */
   aimCol: number;
-  collected: number;
-  totalCharms: number;
   pullNumber: number;
   onAim: (col: number) => void;
   disabled: boolean;
 };
 
 /* ---------------------------------------------------------------- geometry */
-const COLS = 5;
-const GRID_X = [104, 244, 384, 524, 664];
-const GRID_Y = [248, 344];
-const CASE = { x: 36, y: 96, w: 808, h: 318 };
-const RAIL_Y = 76;
-const REST_Y = 148;
-const LIFT_Y = 132;
-const DESCEND_Y = GRID_Y[1] - 30;
-const CHUTE = { x: 706, y: 348, w: 124, h: 66 };
+const VIEW = { w: 880, h: 360 };
+/** Six capsules across — the row the claw can actually reach. */
+const COLS = 6;
+const COL_X = Array.from({ length: COLS }, (_, i) => 88 + i * 104); // 88 .. 608
+const ROW_Y = 208;
+const RADIUS = 34;
+const CASE = { x: 36, y: 62, w: 808, h: 200 };
+const RAIL = { y: 72, h: 6 };
+const REST_Y = 100;
+const LIFT_Y = 96;
+const DESCEND_Y = ROW_Y - RADIUS - 6;
+const CHUTE = { x: 664, y: 190, w: 146, h: 66 };
 const CHUTE_X = CHUTE.x + CHUTE.w / 2;
-const VIEW = { w: 880, h: 560 };
 
 /** Capsule colour per cabinet — identical capsules, cabinet identity. */
 export const CABINET_SHELL = ['#5fd0c5', '#7d8bff', '#ffcd6b'];
-/** Prize rarity palette (used by the paytable chips). */
+/** Prize rarity palette, shared with the paytable chips. */
 export const TIER_COLORS = ['#6f6a7d', '#5fd0c5', '#7d8bff', '#ffcd6b'];
 
 /** A gachapon capsule: coloured lower shell, pale cap, seam, gloss. */
-function Capsule({ shell, scale = 1, label = false }: { shell: string; scale?: number; label?: boolean }) {
+function Capsule({
+  shell,
+  scale = 1,
+  dim = 1,
+  label = false,
+}: {
+  shell: string;
+  scale?: number;
+  dim?: number;
+  label?: boolean;
+}) {
   return (
-    <g transform={`scale(${scale})`}>
-      <ellipse cx="0" cy="30" rx="26" ry="6" fill="#000" opacity="0.32" />
-      <circle cx="0" cy="0" r="28" fill={shell} fillOpacity="0.9" />
-      <path d="M-28 0 A 28 28 0 0 1 28 0 Z" fill="#ffffff" fillOpacity="0.5" />
-      <path d="M-28 0 A 28 28 0 0 0 28 0 Z" fill="#000000" fillOpacity="0.18" />
-      <circle cx="0" cy="0" r="28" fill="none" stroke="#0d0b17" strokeWidth="1.6" opacity="0.4" />
-      <path d="M-27 0 H27" stroke="#0d0b17" strokeWidth="1.8" opacity="0.45" strokeLinecap="round" />
-      <rect x="-7" y="-34" width="14" height="7" rx="3" fill={shell} fillOpacity="0.85" />
-      <ellipse cx="-10" cy="-12" rx="8" ry="5" fill="#fff" opacity="0.35" />
-      <circle cx="13" cy="-16" r="3" fill="#fff" opacity="0.22" />
+    <g transform={`scale(${scale})`} opacity={dim}>
+      <circle cx="0" cy="0" r="34" fill={shell} fillOpacity="0.92" />
+      <path d="M-34 0 A 34 34 0 0 1 34 0 Z" fill="#ffffff" fillOpacity="0.36" />
+      <path d="M-34 0 A 34 34 0 0 0 34 0 Z" fill="#000000" fillOpacity="0.22" />
+      <circle cx="0" cy="0" r="34" fill="none" stroke="#0d0b17" strokeWidth="1.8" opacity="0.42" />
+      <path d="M-33 0 H33" stroke="#0d0b17" strokeWidth="2" opacity="0.45" strokeLinecap="round" />
+      <rect x="-8" y="-41" width="16" height="8" rx="3.5" fill={shell} fillOpacity="0.85" />
+      <ellipse cx="-12" cy="-14" rx="10" ry="6" fill="#fff" opacity="0.32" />
+      <ellipse cx="0" cy="20" rx="20" ry="7" fill="#000" opacity="0.12" />
       {label && (
         <g className="kl-grab-mark">
-          <circle cx="0" cy="0" r="34" fill="none" stroke="#ffcd6b" strokeWidth="1.4" strokeDasharray="4 6" opacity="0.7" />
-          <path d="M-9 -40 -9 -50M-9 -50 -14 -44M-9 -50 -4 -44" stroke="#ffcd6b" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <circle cx="0" cy="0" r="42" fill="none" stroke="#ffcd6b" strokeWidth="1.6" strokeDasharray="5 7" opacity="0.75" />
+          <path d="M-10 -48 -10 -60M-10 -60 -16 -53M-10 -60 -4 -53" stroke="#ffcd6b" strokeWidth="2.2" fill="none" strokeLinecap="round" />
         </g>
       )}
     </g>
@@ -90,8 +102,6 @@ export function ClawMachine({
   outcomeTier,
   targetCol,
   aimCol,
-  collected,
-  totalCharms,
   pullNumber,
   onAim,
   disabled,
@@ -105,11 +115,11 @@ export function ClawMachine({
   const topX = (cabinet.tiers[cabinet.tiers.length - 1].multiplier / 100).toFixed(2).replace(/\.00$/, '');
   const heldShell = slipped ? shell : CABINET_SHELL[Math.min(outcomeTier ?? 1, CABINET_SHELL.length - 1)];
 
-  const col = ((inFlight ? targetCol : aimCol) % COLS + COLS) % COLS;
+  const col = (((inFlight ? targetCol : aimCol) % COLS) + COLS) % COLS;
   // The claw only travels to the chute while dumping; by the time the round is
   // settled it has already gone home, so the case never hides its own readout.
   const carrying = phase === 'dumping';
-  const clawX = carrying ? CHUTE_X : GRID_X[col];
+  const clawX = carrying ? CHUTE_X : COL_X[col];
   const clawY =
     phase === 'descending' || phase === 'gripping' || phase === 'gripping-wait'
       ? DESCEND_Y
@@ -117,8 +127,7 @@ export function ClawMachine({
         ? LIFT_Y
         : REST_Y;
 
-  const gripperOpen =
-    phase === 'idle' || phase === 'positioning' || phase === 'descending' || phase === 'settled';
+  const gripperOpen = phase === 'idle' || phase === 'positioning' || phase === 'descending' || phase === 'settled';
   const holding = phase === 'lifting' || phase === 'dumping';
   const chipLabel = `GRAB TO WIN  ×${topX}`;
 
@@ -144,99 +153,89 @@ export function ClawMachine({
             <stop offset="0" stopColor="#ffe9a8" />
             <stop offset="1" stopColor="#ffb545" stopOpacity="0" />
           </radialGradient>
+          <clipPath id="case-clip">
+            <rect x={CASE.x} y={CASE.y} width={CASE.w} height={CASE.h} rx="10" />
+          </clipPath>
         </defs>
 
         {/* ---------------------------------------------------------- body */}
-        <rect x="12" y="12" width="856" height="536" rx="20" fill="url(#body)" stroke="#3b3560" strokeWidth="2" />
-        <rect x="12" y="12" width="856" height="58" rx="20" fill="#191533" stroke="#3b3560" strokeWidth="1.5" />
-        {Array.from({ length: 19 }).map((_, i) => (
+        <rect x="12" y="12" width="856" height="336" rx="18" fill="url(#body)" stroke="#3b3560" strokeWidth="2" />
+        <rect x="12" y="12" width="856" height="42" rx="18" fill="#191533" stroke="#3b3560" strokeWidth="1.5" />
+        {Array.from({ length: 9 }).map((_, i) => (
           <circle
             key={i}
-            cx={40 + i * 44.4}
-            cy={41}
-            r="4.4"
+            cx={352 + i * 22}
+            cy={33}
+            r="3.4"
             fill="url(#lamp)"
             className="kl-bulb"
             style={{ animationDelay: `${(i % 6) * 0.24}s` }}
           />
         ))}
-
-        {/* ---------------------------------------------------------- case */}
-        <rect x={CASE.x} y={CASE.y} width={CASE.w} height={CASE.h} rx="12" fill="#0b0a17" stroke="#4b4477" strokeWidth="2" />
-        <g stroke="#332e57" strokeWidth="1" opacity="0.55">
-          <path d={`M${CASE.x} ${CASE.y + 54} H${CASE.x + CASE.w}`} />
-          <path d={`M${CASE.x} ${CASE.y + 108} H${CASE.x + CASE.w}`} />
-          <path d={`M${CASE.x + 20} ${CASE.y} V${CASE.y + CASE.h}`} />
-          <path d={`M${CASE.x + CASE.w - 20} ${CASE.y} V${CASE.y + CASE.h}`} />
+        <text x="34" y="39" className="kl-hud">
+          PULL #{pullNumber}
+        </text>
+        <g className="kl-chip-hud">
+          <rect x={CASE.x + CASE.w - 16 - (chipLabel.length * 7.2 + 24)} y="20" width={chipLabel.length * 7.2 + 24} height="26" rx="13" />
+          <text x={CASE.x + CASE.w - 28} y="38" textAnchor="end">
+            {chipLabel}
+          </text>
         </g>
 
-        {/* the prize bin, behind the grid so a carried capsule lands in front of it */}
-        <rect x={CHUTE.x} y={CHUTE.y} width={CHUTE.w} height={CHUTE.h} rx="8" fill="#07060e" stroke="#4b4477" strokeWidth="1.6" />
-        <text x={CHUTE.x + 12} y={CHUTE.y + 19} textAnchor="start" className="kl-chute-label">
-          PRIZE
-        </text>
+        {/* ---------------------------------------------------------- case */}
+        <rect x={CASE.x} y={CASE.y} width={CASE.w} height={CASE.h} rx="10" fill="#0b0a17" stroke="#4b4477" strokeWidth="2" />
+        <g clipPath="url(#case-clip)">
+          <g stroke="#332e57" strokeWidth="1" opacity="0.5">
+            <path d={`M${CASE.x} 96 H${CASE.x + CASE.w}`} />
+            <path d={`M${CASE.x} 128 H${CASE.x + CASE.w}`} />
+            <path d={`M${CASE.x + 22} ${CASE.y} V${CASE.y + CASE.h}`} />
+            <path d={`M${CASE.x + CASE.w - 22} ${CASE.y} V${CASE.y + CASE.h}`} />
+          </g>
 
-        {/* ------------------------------------------------- capsule grid */}
-        {GRID_Y.map((cy, row) =>
-          GRID_X.map((cx, column) => {
-            const index = row * COLS + column;
-            const isGrabRow = row === GRID_Y.length - 1;
-            const aimed = isGrabRow && !inFlight && (hoverCol === column || (hoverCol === null && aimCol === column));
+          {/* prize chute, inside the case */}
+          <rect x={CHUTE.x} y={CHUTE.y} width={CHUTE.w} height={CHUTE.h} rx="8" fill="#07060e" stroke="#4b4477" strokeWidth="1.6" />
+          <text x={CHUTE.x + 14} y={CHUTE.y + 20} className="kl-chute-label">
+            PRIZE
+          </text>
+          {won && (
+            <g transform={`translate(${CHUTE_X} ${CHUTE.y + 42}) scale(0.66)`} className="kl-prize">
+              <Capsule shell={heldShell} />
+            </g>
+          )}
+
+          {/* the pickable row */}
+          {COL_X.map((cx, column) => {
+            const aimed = !inFlight && (hoverCol === column || (hoverCol === null && aimCol === column));
             const playing = inFlight && targetCol === column;
-            const taken = holding && targetCol === column && row === 1;
-            const tilt = ((index * 29) % 9) - 4;
+            const taken = holding && targetCol === column;
             return (
               <g
-                key={index}
-                transform={`translate(${cx} ${cy + tilt * 0.5}) rotate(${tilt * 0.5})`}
+                key={column}
+                transform={`translate(${cx} ${ROW_Y})`}
                 className={`kl-capsule ${aimed ? 'aimed' : ''} ${playing ? 'playing' : ''} ${taken ? 'taken' : ''}`}
               >
                 <Capsule shell={shell} label={aimed && !inFlight} />
               </g>
             );
-          }),
-        )}
+          })}
 
-        {/* ------------------------------------------------------- HUD */}
-        <text x="60" y="128" className="kl-hud">
-          PULL #{pullNumber}
-        </text>
-        <text x="72" y="400" className="kl-hud-small">
-          COLLECTED
-        </text>
-        {Array.from({ length: totalCharms }).map((_, i) => (
-          <circle key={i} cx={172 + i * 15} cy={396} r="4.4" className={`kl-pip ${i < collected ? 'on' : ''}`} />
-        ))}
-        <g className="kl-chip-hud">
-          <rect x={CASE.x + CASE.w - 16 - (chipLabel.length * 7.6 + 26)} y="108" width={chipLabel.length * 7.6 + 26} height="28" rx="14" />
-          <text x={CASE.x + CASE.w - 29} y="127" textAnchor="end">
-            {chipLabel}
-          </text>
+          {/* basket floor */}
+          <rect x={CASE.x} y={246} width={CASE.w} height="16" fill="#151230" />
+          <rect x={CASE.x + 12} y={250} width={CASE.w - 24} height="8" rx="4" fill="#0d0b1c" opacity="0.9" />
+
         </g>
-
-        {/* ------------------------------------------------------- floor */}
-        <rect x={CASE.x} y={CASE.y + CASE.h - 34} width={CASE.w} height="34" fill="#151230" />
-        <rect x={CASE.x + 16} y={CASE.y + CASE.h - 30} width={CASE.w - 32} height="26" rx="6" fill="#0d0b1c" stroke="#2f2a4d" />
-
-        {won && (
-          <g transform={`translate(${CHUTE_X} ${CHUTE.y + 34}) scale(0.7)`} className="kl-prize">
-            <Capsule shell={heldShell} />
-          </g>
-        )}
 
         {/* -------------------------------------------------------- rail */}
-        <rect x="40" y={RAIL_Y} width="800" height="8" rx="4" fill="url(#rail)" />
+        <rect x="44" y={RAIL.y} width="792" height={RAIL.h} rx="3" fill="url(#rail)" />
         <g className="kl-claw-x" style={{ transform: `translateX(${clawX}px)` }}>
-          <rect x="-18" y={RAIL_Y - 6} width="36" height="20" rx="6" fill="#8f94b8" />
-          <rect x="-11" y={RAIL_Y - 10} width="22" height="6" rx="3" fill="#c3c8e6" opacity="0.75" />
+          <rect x="-18" y={RAIL.y - 6} width="36" height="18" rx="6" fill="#8f94b8" />
+          <rect x="-11" y={RAIL.y - 10} width="22" height="6" rx="3" fill="#c3c8e6" opacity="0.75" />
         </g>
         <g className="kl-claw" style={{ transform: `translate(${clawX}px, ${clawY}px)` }}>
-          <line x1="0" y1={RAIL_Y + 12 - clawY} x2="0" y2="-16" stroke="#aeb4d6" strokeWidth="1.8" />
-          {/* hub */}
+          <line x1="0" y1={RAIL.y + RAIL.h - clawY} x2="0" y2="-16" stroke="#aeb4d6" strokeWidth="1.8" />
           <rect x="-26" y="-18" width="52" height="10" rx="5" fill="#dfe3ff" opacity="0.7" />
           <rect x="-23" y="-10" width="46" height="15" rx="6" fill="#b9bfe0" />
           <circle cx="0" cy="-2" r="4" fill="#8f94b8" />
-          {/* two prongs that open wide and close on the capsule */}
           {[-1, 1].map(side => (
             <g key={side}>
               <circle cx={side * 13} cy="0" r="4.6" fill="#8f94b8" />
@@ -254,47 +253,41 @@ export function ClawMachine({
               />
             </g>
           ))}
-          {/* middle prong keeps the capsule centred while lifting */}
-          <path
-            d={gripperOpen ? 'M0 6 L0 34' : 'M0 6 L0 28'}
-            stroke="#9aa0c4"
-            strokeWidth="2.8"
-            strokeLinecap="round"
-          />
+          <path d={gripperOpen ? 'M0 6 L0 34' : 'M0 6 L0 28'} stroke="#9aa0c4" strokeWidth="2.8" strokeLinecap="round" />
           {holding && (
-            <g transform="translate(0 62)" className={`kl-held ${phase === 'dumping' ? 'dropping' : ''}`}>
-              <Capsule shell={heldShell} />
+            <g transform="translate(0 68)" className={`kl-held ${phase === 'dumping' ? 'dropping' : ''}`}>
+              <Capsule shell={heldShell} scale={0.94} />
             </g>
           )}
         </g>
 
         {/* ------------------------------------------------------- plates */}
         <g className={`kl-plate ${slipped ? 'tilt-on' : ''}`}>
-          <rect x="60" y="474" width="180" height="34" rx="7" />
-          <text x="150" y="496">TILT</text>
+          <rect x="60" y="282" width="170" height="30" rx="7" />
+          <text x="145" y="302">TILT</text>
         </g>
         <g className={`kl-plate ${won ? 'jackpot-on' : ''}`}>
-          <rect x="640" y="474" width="180" height="34" rx="7" />
-          <text x="730" y="496">JACKPOT</text>
+          <rect x="650" y="282" width="170" height="30" rx="7" />
+          <text x="735" y="302">JACKPOT</text>
         </g>
         <g className="kl-plate kl-plate-coin">
-          <rect x="330" y="474" width="220" height="34" rx="7" />
-          <text x="440" y="496">INSERT BET</text>
+          <rect x="330" y="282" width="220" height="30" rx="7" />
+          <text x="440" y="302">INSERT BET</text>
         </g>
 
-        <rect x={CASE.x} y={CASE.y} width={CASE.w} height={CASE.h} rx="12" fill="url(#glass)" className="kl-glass" />
+        <rect x={CASE.x} y={CASE.y} width={CASE.w} height={CASE.h} rx="10" fill="url(#glass)" className="kl-glass" />
       </svg>
 
       {/* aim strip: one button per column, so the claw can be placed without a drag */}
       <div className="kl-aim" aria-hidden={disabled}>
-        {GRID_X.map((cx, column) => (
+        {COL_X.map((cx, column) => (
           <button
             key={column}
             type="button"
             className="kl-aim-col"
             style={{
-              left: `${((cx - 70) / VIEW.w) * 100}%`,
-              width: `${(140 / VIEW.w) * 100}%`,
+              left: `${((cx - 52) / VIEW.w) * 100}%`,
+              width: `${(104 / VIEW.w) * 100}%`,
             }}
             disabled={disabled}
             aria-label={`Aim the claw at column ${column + 1}`}
