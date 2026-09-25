@@ -6,6 +6,9 @@
 # (`npm run start:klabak`) and playwright + chromium.
 #
 #   python3 tools/make-og-card.py
+#
+# The card is rendered at 2x for crisp text and then resampled to exactly
+# 1200x630, which is the size the og:image meta tags declare. Needs Pillow.
 
 import asyncio, base64, pathlib
 from playwright.async_api import async_playwright
@@ -85,8 +88,11 @@ async def main():
         pg2 = await ctx2.new_page()
         await pg2.goto("file:///tmp/klabak-card.html", wait_until="load")
         await pg2.wait_for_timeout(600)
-        await pg2.screenshot(path="examples/klabak/public/og-image.png")
-        print("kartu ditulis")
+        await pg2.screenshot(path="/tmp/klabak-card-2x.png")
+        from PIL import Image
+        Image.open("/tmp/klabak-card-2x.png").convert("RGB").resize((1200, 630), Image.LANCZOS).save(
+            "examples/klabak/public/og-image.png", "PNG", optimize=True)
+        print("kartu ditulis: examples/klabak/public/og-image.png (1200x630)")
         await b.close()
 
 asyncio.run(main())
