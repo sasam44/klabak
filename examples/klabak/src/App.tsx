@@ -4,6 +4,8 @@ import { formatUnits, parseUnits } from 'viem';
 
 import { ClawMachine, type Phase } from './components/ClawMachine';
 import { Paytable } from './components/Paytable';
+import { PrizeLadder } from './components/PrizeLadder';
+import { WinOverlay } from './components/WinOverlay';
 import { useCasinoHost } from './lib/useCasinoHost';
 import {
   CABINETS,
@@ -50,6 +52,12 @@ type HistoryEntry = { cabinetId: number; tier: number; multiplier: number };
 
 const FAST_MODE_KEY = 'klabak.fast';
 const STORAGE_WAGER = 'klabak.wager';
+/** How many pulls the auto button queues up. */
+const AUTO_PULLS = 10;
+/** Centi-units: rungs at or above x4 take over the glass. */
+const CELEBRATE_AT = 400;
+/** Nothing smaller than this, so halving a bet can never land on zero. */
+const MIN_WAGER = 0.01;
 
 export function App() {
   const { hostApi, snapshot, mode } = useCasinoHost();
@@ -64,6 +72,9 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [fastMode, setFastMode] = useState(false);
   const [muted, setMutedState] = useState(false);
+  /** Remaining auto pulls, or null when the machine is hand-driven. */
+  const [autoLeft, setAutoLeft] = useState<number | null>(null);
+  const [celebrate, setCelebrate] = useState(false);
 
   const cabinet = cabinetById(cabinetId);
   const decimals = mode === 'hosted' ? (snapshot?.token.decimals ?? 18) : 18;
@@ -113,6 +124,24 @@ export function App() {
     }
     return balance;
   }, [mode, snapshot, cabinet, balance]);
+
+  /** Halve or double the current bet, clamped to what the chain will accept. */
+  const scaleWager = useCallback((factor: number) => {
+    setWagerInput(current => {
+      const parsed = Number(current.replace(',', '.'));
+      if (!Number.isFinite(parsed) || parsed <= 0) return current;
+      const wanted = factor < 1 ? Math.max(parsed * factor, MIN_WAGER) : parsed * factor;
+      const cap = maxWager !== undefined ? Number(formatUnits(maxWager, decimals)) : undefined;
+      const next = cap !== undefined && cap > 0 ? Math.min(wanted, cap) : wanted;
+      const text = String(Number(next.toFixed(6)));
+      try {
+        window.localStorage.setItem(STORAGE_WAGER, text);
+      } catch {
+        /* ignore */
+      }
+      return text;
+    });
+  }, [decimals, maxWager]);
 
   // ---------------------------------------------------------------- hosted settle
   useEffect(() => {
@@ -221,6 +250,12 @@ export function App() {
     const won = tierRow.multiplier > 0;
 
     if (won) sfxWin(tier);
+    // Small grips stay a line of text under the machine; the real rungs take
+    // the glass, because a win that is not shown large is not felt as a win.
+    if (won && tierRow.multiplier >= CELEBRATE_AT) {
+      setCelebrate(true);
+      later(() => setCelebrate(false), ms(2300));
+    }
     setHistory(prev => [{ cabinetId: round.cabinetId, tier, multiplier: tierRow.multiplier }, ...prev].slice(0, 40));
     if (won && tierRow.charm) {
       setCollection(prev => {
@@ -328,6 +363,27 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [canPull, openRound]);
 
+  /**
+   * Auto pulls. Each pull still opens its own session and settles on its own
+   * randomness, so the chain sees exactly the rounds a finger would have made;
+   * the queue just saves the finger. It stops itself the moment the bet stops
+   * being coverable, the wallet drops out, or a pull errors.
+   */
+  const idleNow = round === null || round.status === 'idle';
+  useEffect(() => {
+    if (autoLeft === null) return;
+    if (autoLeft <= 0 || error || insufficient || !walletReady) {
+      setAutoLeft(null);
+      return;
+    }
+    if (!idleNow || busy || !canPull) return;
+    const timer = window.setTimeout(() => {
+      setAutoLeft(current => (current === null ? null : current - 1));
+      void openRound();
+    }, 380);
+    return () => window.clearTimeout(timer);
+  }, [autoLeft, idleNow, busy, canPull, error, insufficient, walletReady, openRound]);
+
   // ---------------------------------------------------------------- render
   return (
     <div className="kl-app">
@@ -377,7 +433,7 @@ export function App() {
       </header>
 
       <main className="kl-main">
-        <div className="kl-machine">
+        <div className={`kl-machine ${result?.won ? 'won' : ''}`}>
           <div className="kl-tabs" role="tablist" aria-label="Cabinet">
             {CABINETS.map(c => (
               <button
@@ -402,6 +458,7 @@ export function App() {
             ))}
           </div>
 
+          <div className="kl-case-wrap">
           <ClawMachine
             cabinet={cabinet}
             cabinetId={cabinetId}
@@ -417,6 +474,16 @@ export function App() {
               setAimCol(column);
             }}
           />
+          {celebrate && result?.won && (
+            <WinOverlay
+              key={round?.id ?? 'win'}
+              multiplier={result.multiplier}
+              prize={result.prize}
+              payoutText={`${formatUnits(result.payout, decimals)} ${symbol}`}
+              onDismiss={() => setCelebrate(false)}
+            />
+          )}
+          </div>
 
           {/* -------------------------------------------------- control deck */}
           <div className="kl-deck">
@@ -457,6 +524,12 @@ export function App() {
                   disabled={busy}
                   aria-label={`Wager in ${symbol || 'tokens'}`}
                 />
+                <button type="button" className="kl-ghost" disabled={busy} onClick={() => scaleWager(0.5)}>
+                  ½
+                </button>
+                <button type="button" className="kl-ghost" disabled={busy} onClick={() => scaleWager(2)}>
+                  ×2
+                </button>
                 <button
                   type="button"
                   className="kl-ghost"
@@ -470,6 +543,12 @@ export function App() {
                 </button>
               </div>
               <div className="kl-deck-stat">
+                <span className="kl-deck-label">RTP</span>
+                <strong className="kl-rtp" title="Declared on-chain, identical to the paytable below.">
+                  {(DECLARED_RTP_PPM / 10000).toFixed(2)}%
+                </strong>
+              </div>
+              <div className="kl-deck-stat">
                 <span className="kl-deck-label">Balance</span>
                 <strong className="kl-balance">
                   {balance !== undefined ? `${formatUnits(balance, decimals)} ${symbol}` : '—'}
@@ -477,15 +556,36 @@ export function App() {
               </div>
             </div>
 
-            <button type="button" className="kl-pull" onClick={() => void openRound()} disabled={!canPull}>
-              {busy
-                ? 'the claw is moving…'
-                : insufficient
-                  ? 'not enough balance'
-                  : !walletReady
-                    ? 'wallet not ready'
-                    : 'pull the claw'}
-            </button>
+            <PrizeLadder cabinet={cabinet} />
+
+            <div className="kl-fire-row">
+              <button type="button" className="kl-pull" onClick={() => void openRound()} disabled={!canPull}>
+                <span className="kl-pull-label">
+                  {busy
+                    ? 'the claw is moving…'
+                    : insufficient
+                      ? 'not enough balance'
+                      : !walletReady
+                        ? 'wallet not ready'
+                        : 'pull the claw'}
+                </span>
+                {!busy && !insufficient && walletReady && (
+                  <span className="kl-pull-max">
+                    win up to ×{topMultiplier(cabinet)} · {wagerInput || '0'} {symbol}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                className={`kl-auto ${autoLeft !== null ? 'on' : ''}`}
+                disabled={autoLeft === null && !canPull}
+                onClick={() =>
+                  setAutoLeft(current => (current === null ? AUTO_PULLS : null))
+                }
+              >
+                {autoLeft === null ? `auto ×${AUTO_PULLS}` : `stop · ${autoLeft}`}
+              </button>
+            </div>
 
             {result ? (
               <div className={`kl-banner ${result.won ? 'win' : 'slip'}`} role="status">

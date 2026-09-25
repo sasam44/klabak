@@ -268,7 +268,7 @@ export function ClawMachine({
         </g>
         <g className={`kl-plate ${won ? 'jackpot-on' : ''}`}>
           <rect x="650" y="282" width="170" height="30" rx="7" />
-          <text x="735" y="302">JACKPOT</text>
+          <text x="735" y="302">JACKPOT ×{Math.round(cabinet.tiers[cabinet.tiers.length - 1].multiplier / 100)}</text>
         </g>
         <g className="kl-plate kl-plate-coin">
           <rect x="330" y="282" width="220" height="30" rx="7" />

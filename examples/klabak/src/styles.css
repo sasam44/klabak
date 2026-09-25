@@ -318,3 +318,110 @@ h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; font-weight: 650; }
   .kl-bulb, .kl-glass, .kl-held, .kl-plate.tilt-on, .kl-plate.jackpot-on, .kl-prize { animation: none; }
   .kl-claw, .kl-claw-x, .kl-banner { transition: none; animation: none; }
 }
+
+/* ===========================================================================
+   The pull moment — prize board, auto pulls, win takeover.
+   Everything here is built to put the ceiling in front of the player and to
+   make a big rung land hard, without turning every grip into a fireworks show.
+   =========================================================================== */
+
+/* the overlay must hug the glass, so the deck (and therefore the next pull)
+   stays visible and clickable while the win is on screen */
+.kl-case-wrap { position: relative; }
+.kl-win { border-radius: 14px; }
+
+/* prize ladder: the ceiling sits one line above the button that can pay it */
+.kl-ladder { display: flex; align-items: stretch; gap: 7px; flex-wrap: wrap; margin: 0 0 10px; }
+.kl-ladder-label {
+  align-self: center; font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.kl-rung {
+  display: flex; flex-direction: column; gap: 1px; padding: 5px 11px; border-radius: 10px;
+  border: 1px solid var(--panel-line); background: rgba(255, 255, 255, 0.02); min-width: 104px;
+}
+.kl-rung b { font-family: var(--mono); font-size: 15px; color: var(--ink); line-height: 1.15; }
+.kl-rung i { font-style: normal; font-size: 11px; color: var(--ink-dim); line-height: 1.2; }
+.kl-rung em { font-style: normal; font-family: var(--mono); font-size: 9.5px; color: var(--ink-faint); }
+.kl-rung.top {
+  border-color: rgba(255, 205, 107, 0.55);
+  background: linear-gradient(180deg, rgba(255, 205, 107, 0.15), rgba(255, 205, 107, 0.03));
+  box-shadow: 0 0 20px rgba(255, 205, 107, 0.13);
+}
+.kl-rung.top b { color: var(--hot); font-size: 17px; }
+.kl-rung.slip { opacity: 0.72; }
+.kl-rung.slip b { font-size: 13px; color: var(--ink-dim); }
+
+/* pull row: the lever plus a queue of pulls beside it */
+.kl-fire-row { display: flex; gap: 9px; align-items: stretch; margin-top: 10px; }
+.kl-fire-row .kl-pull { flex: 1; width: auto; margin-top: 0; }
+.kl-pull-label { display: block; }
+.kl-pull-max {
+  display: block; margin-top: 3px; font-size: 11px; letter-spacing: 0.14em; opacity: 0.72; font-weight: 600;
+}
+.kl-auto {
+  min-width: 104px; padding: 8px 12px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--panel-line); background: rgba(255, 255, 255, 0.03); color: var(--ink-dim);
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.07em; text-transform: uppercase;
+  transition: color 0.18s, border-color 0.18s;
+}
+.kl-auto:hover:not(:disabled) { color: var(--ink); border-color: rgba(244, 241, 255, 0.3); }
+.kl-auto.on { border-color: rgba(255, 205, 107, 0.65); color: var(--hot); }
+.kl-auto:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.kl-rtp { font-family: var(--mono); font-size: 14px; color: var(--good); }
+
+/* win takeover: the big rungs, and only the big rungs */
+.kl-machine.won .kl-glass { animation: kl-glass-win 900ms ease-out; }
+@keyframes kl-glass-win { 0% { filter: brightness(1.7); } 100% { filter: none; } }
+
+.kl-win {
+  position: absolute; inset: 0; z-index: 3; padding: 0; border: 0; border-radius: 20px; cursor: pointer;
+  display: grid; place-items: center; overflow: hidden; color: inherit;
+  background: radial-gradient(circle at 50% 46%, rgba(28, 20, 52, 0.87) 0%, rgba(11, 9, 24, 0.93) 72%);
+  animation: kl-win-in 240ms ease-out;
+}
+.kl-win-rays {
+  position: absolute; width: 168%; aspect-ratio: 1; opacity: 0.75;
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 205, 107, 0.2) 0deg 7deg, transparent 7deg 30deg,
+    rgba(255, 205, 107, 0.12) 30deg 36deg, transparent 36deg 60deg
+  );
+  animation: kl-win-spin 11s linear infinite;
+}
+.kl-win-sparks i {
+  position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; border-radius: 2px;
+  background: var(--hot); animation: kl-burst 900ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+.kl-win-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; }
+.kl-win-title { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.34em; color: var(--hot); }
+.kl-win-mult {
+  font-family: var(--mono); font-size: clamp(40px, 6.4vw, 68px); line-height: 1; color: #fff;
+  text-shadow: 0 0 36px rgba(255, 205, 107, 0.6); animation: kl-pop 420ms cubic-bezier(0.2, 1.5, 0.4, 1);
+}
+.kl-win-prize { font-size: 15px; color: var(--ink); }
+.kl-win-payout { font-family: var(--mono); font-size: 17px; color: var(--good); }
+.kl-win-hint {
+  margin-top: 3px; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.kl-win-timer {
+  position: absolute; left: 0; bottom: 0; height: 3px;
+  background: linear-gradient(90deg, var(--hot), rgba(255, 205, 107, 0.15));
+  animation: kl-win-timer 2.3s linear forwards;
+}
+@keyframes kl-win-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes kl-win-spin { to { transform: rotate(360deg); } }
+@keyframes kl-pop { 0% { transform: scale(0.72); opacity: 0; } 60% { transform: scale(1.06); } 100% { transform: scale(1); opacity: 1; } }
+@keyframes kl-burst {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(0.3); opacity: 0; }
+}
+@keyframes kl-win-timer { from { width: 100%; } to { width: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .kl-win-rays, .kl-win-sparks, .kl-win-timer, .kl-win-mult { animation: none; }
+  .kl-win-sparks { display: none; }
+  .kl-win-timer { width: 100%; }
+}
