@@ -5,41 +5,45 @@
 # composes the social card around it. Needs the dev server on :3200
 # (`npm run start:klabak`) and playwright + chromium.
 #
-#   python3 tools/make-og-card.py
+#   python3 tools/make-og-card.py                 # expects the dev server on :3200
+#   KLABAK_URL=http://127.0.0.1:4173/ python3 tools/make-og-card.py   # or any running URL
 #
 # The card is rendered at 2x for crisp text and then resampled to exactly
 # 1200x630, which is the size the og:image meta tags declare. Needs Pillow.
 
-import asyncio, base64, pathlib
+import asyncio, base64, os, pathlib
 from playwright.async_api import async_playwright
 
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch()
-        ctx = await b.new_context(viewport={"width": 1150, "height": 900}, device_scale_factor=2)
+        ctx = await b.new_context(viewport={"width": 980, "height": 1150}, device_scale_factor=2)
         pg = await ctx.new_page()
-        await pg.goto("http://127.0.0.1:3200/", wait_until="domcontentloaded")
+        await pg.goto(os.environ.get("KLABAK_URL", "http://127.0.0.1:3200/"), wait_until="domcontentloaded")
         await pg.wait_for_timeout(2500)
         shot = None
-        for attempt in range(30):
+        for attempt in range(40):
             await pg.click(".kl-pull")
-            for _ in range(40):
-                if await pg.locator(".kl-banner").count():
+            for _ in range(60):
+                # Wait for the win banner specifically: the idle banner also mentions ×N.
+                if await pg.locator(".kl-banner.win").count():
                     txt = await pg.inner_text(".kl-banner")
-                    if "×" in txt:
-                        await pg.wait_for_timeout(800)
-                        el = pg.locator(".kl-stage")
-                        box = await el.bounding_box()
-                        print(f"menang: {txt.replace(chr(10),' | ')}  stage {box['width']:.0f}x{box['height']:.0f}")
-                        await el.screenshot(path="/tmp/stage.png")
-                        shot = txt
+                    await pg.wait_for_timeout(800)
+                    el = pg.locator(".kl-machine")
+                    box = await el.bounding_box()
+                    print(f"menang: {txt.replace(chr(10),' | ')}  stage {box['width']:.0f}x{box['height']:.0f}")
+                    await el.screenshot(path="/tmp/stage.png")
+                    shot = txt
                     break
-                await pg.wait_for_timeout(140)
+                await pg.wait_for_timeout(180)
             if shot:
                 break
-            await pg.wait_for_timeout(900)
+            for _ in range(40):
+                if (await pg.inner_text(".kl-pull")).strip().lower().startswith("pull"):
+                    break
+                await pg.wait_for_timeout(180)
         if not shot:
-            await pg.locator(".kl-stage").screenshot(path="/tmp/stage.png")
+            await pg.locator(".kl-machine").screenshot(path="/tmp/stage.png")
             print("tanpa kemenangan; pakai tangkapan kabinet biasa")
         await ctx.close()
 

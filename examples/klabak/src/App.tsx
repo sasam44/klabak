@@ -36,7 +36,8 @@ type Round = {
   kind: 'hosted' | 'demo';
   cabinetId: number;
   wager: bigint;
-  targetSlot: number;
+  /** Column the claw plays. Cosmetic: the tier comes from the chain, not the column. */
+  targetCol: number;
   status: RoundStatus;
   sessionKey?: string;
   sessionId?: string;
@@ -54,6 +55,7 @@ export function App() {
   const { hostApi, snapshot, mode } = useCasinoHost();
 
   const [cabinetId, setCabinetId] = useState(0);
+  const [aimCol, setAimCol] = useState(2);
   const [wagerInput, setWagerInput] = useState('10');
   const [round, setRound] = useState<Round | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -247,13 +249,13 @@ export function App() {
     if (!wager) return;
     initAudio();
     setError(null);
-    const targetSlot = Math.floor(Math.random() * 7);
+    const targetCol = aimCol;
     const base: Round = {
       id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
       kind: mode === 'hosted' ? 'hosted' : 'demo',
       cabinetId,
       wager,
-      targetSlot,
+      targetCol,
       status: 'positioning',
     };
 
@@ -280,7 +282,7 @@ export function App() {
       setRound(null);
       setError(cause instanceof Error ? cause.message : 'The machine refused that pull.');
     }
-  }, [wager, mode, cabinetId, hostApi, cabinet, later, ms, clearTimers]);
+  }, [wager, mode, cabinetId, hostApi, cabinet, later, ms, clearTimers, aimCol]);
 
   const busy =
     round !== null && ['positioning', 'descending', 'gripping-wait', 'gripping', 'lifting', 'dumping'].includes(round.status);
@@ -375,107 +377,163 @@ export function App() {
       </header>
 
       <main className="kl-main">
-        <section className="kl-stage">
+        <div className="kl-machine">
+          <div className="kl-tabs" role="tablist" aria-label="Cabinet">
+            {CABINETS.map(c => (
+              <button
+                key={c.id}
+                role="tab"
+                aria-selected={c.id === cabinetId}
+                className={`kl-tab ${c.id === cabinetId ? 'active' : ''}`}
+                disabled={busy || mode === 'connecting'}
+                type="button"
+                onClick={event => {
+                  if (c.id === cabinetId) return;
+                  sfxClick();
+                  setCabinetId(c.id);
+                  event.currentTarget.blur();
+                }}
+              >
+                <span className="kl-tab-name">{c.name}</span>
+                <span className="kl-tab-meta">
+                  {c.volatility} · up to ×{(c.tiers[c.tiers.length - 1].multiplier / 100).toFixed(0)}
+                </span>
+              </button>
+            ))}
+          </div>
+
           <ClawMachine
             cabinet={cabinet}
             cabinetId={cabinetId}
             phase={(round?.status as Phase) ?? 'idle'}
             outcomeTier={round?.outcome?.tier ?? null}
-            targetSlot={round?.targetSlot ?? 3}
+            targetCol={round?.targetCol ?? aimCol}
+            aimCol={aimCol}
+            collected={charmCount}
+            totalCharms={totalCharms}
+            pullNumber={history.length + 1}
             disabled={busy || mode === 'connecting'}
-            onSelectCabinet={id => {
-              if (id === cabinetId) return;
+            onAim={column => {
+              if (column === aimCol) return;
               sfxClick();
-              setCabinetId(id);
+              setAimCol(column);
             }}
           />
-          {result && (
-            <div className={`kl-banner ${result.won ? 'win' : 'slip'}`} role="status">
-              {result.won ? (
-                <>
-                  <strong>
-                    {result.prize} · ×{result.multiplier.toFixed(2)}
-                  </strong>
-                  <span>
-                    +{formatUnits(result.payout, decimals)} {symbol}
-                    {result.isDemo ? ' (demo)' : ''}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <strong>The claw slipped.</strong>
-                  <span>Nothing came up. The pile does not move — that is the cabinet, not a bug.</span>
-                </>
-              )}
-            </div>
-          )}
-        </section>
 
-        <aside className="kl-side">
-          <div className="kl-panel">
-            <div className="kl-panel-head">
-              <span className="kl-label">Bet</span>
-              <span className="kl-balance">
-                {balance !== undefined ? `${formatUnits(balance, decimals)} ${symbol}` : '—'}
-              </span>
-            </div>
-            <div className="kl-bet-row">
-              <input
-                className="kl-input"
-                inputMode="decimal"
-                value={wagerInput}
-                onChange={event => {
-                  setWagerInput(event.target.value);
-                  try {
-                    window.localStorage.setItem(STORAGE_WAGER, event.target.value);
-                  } catch {
-                    /* ignore */
-                  }
-                }}
-                disabled={busy}
-                aria-label={`Wager in ${symbol || 'tokens'}`}
-              />
-              <button
-                type="button"
-                className="kl-ghost"
-                disabled={busy || maxWager === undefined}
-                onClick={() => {
-                  if (maxWager === undefined) return;
-                  setWagerInput(formatUnits(maxWager, decimals));
-                }}
-              >
-                max
-              </button>
-            </div>
-            <div className="kl-quick">
-              {['1', '5', '10', '50'].map(v => (
-                <button key={v} type="button" className="kl-quick-btn" disabled={busy} onClick={() => setWagerInput(v)}>
-                  {v}
+          {/* -------------------------------------------------- control deck */}
+          <div className="kl-deck">
+            <div className="kl-deck-row">
+              <div className="kl-chips">
+                <span className="kl-deck-label">Bet</span>
+                {['1', '5', '10', '50'].map(value => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={`kl-quick-btn ${wagerInput === value ? 'active' : ''}`}
+                    disabled={busy}
+                    onClick={event => {
+                      setWagerInput(value);
+                      try {
+                        window.localStorage.setItem(STORAGE_WAGER, value);
+                      } catch {
+                        /* ignore */
+                      }
+                      event.currentTarget.blur();
+                    }}
+                  >
+                    {value}
+                  </button>
+                ))}
+                <input
+                  className="kl-input"
+                  inputMode="decimal"
+                  value={wagerInput}
+                  onChange={event => {
+                    setWagerInput(event.target.value);
+                    try {
+                      window.localStorage.setItem(STORAGE_WAGER, event.target.value);
+                    } catch {
+                      /* ignore */
+                    }
+                  }}
+                  disabled={busy}
+                  aria-label={`Wager in ${symbol || 'tokens'}`}
+                />
+                <button
+                  type="button"
+                  className="kl-ghost"
+                  disabled={busy || maxWager === undefined}
+                  onClick={() => {
+                    if (maxWager === undefined) return;
+                    setWagerInput(formatUnits(maxWager, decimals));
+                  }}
+                >
+                  max
                 </button>
-              ))}
+              </div>
+              <div className="kl-deck-stat">
+                <span className="kl-deck-label">Balance</span>
+                <strong className="kl-balance">
+                  {balance !== undefined ? `${formatUnits(balance, decimals)} ${symbol}` : '—'}
+                </strong>
+              </div>
             </div>
 
-            <button
-              type="button"
-              className="kl-pull"
-              onClick={() => void openRound()}
-              disabled={!canPull}
-            >
-              {busy ? 'the claw is moving…' : insufficient ? 'not enough balance' : !walletReady ? 'wallet not ready' : 'pull the claw'}
+            <button type="button" className="kl-pull" onClick={() => void openRound()} disabled={!canPull}>
+              {busy
+                ? 'the claw is moving…'
+                : insufficient
+                  ? 'not enough balance'
+                  : !walletReady
+                    ? 'wallet not ready'
+                    : 'pull the claw'}
             </button>
+
+            {result ? (
+              <div className={`kl-banner ${result.won ? 'win' : 'slip'}`} role="status">
+                {result.won ? (
+                  <>
+                    <strong>
+                      {result.prize} · ×{result.multiplier.toFixed(2)}
+                    </strong>
+                    <span>
+                      +{formatUnits(result.payout, decimals)} {symbol}
+                      {result.isDemo ? ' (demo)' : ''} — the claw dropped it in the chute.
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <strong>The claw slipped.</strong>
+                    <span>Nothing came up. The capsules settle back — that is the cabinet, not a bug.</span>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="kl-banner idle">
+                <strong>{cabinet.name}</strong>
+                <span>
+                  Click a column to place the claw, then pull. Space also pulls. {topMultiplier(cabinet)}× is this
+                  cabinet&rsquo;s top prize.
+                </span>
+              </div>
+            )}
+
+            {error && <p className="kl-error">{error}</p>}
             {mode === 'standalone' && (
               <p className="kl-note">
                 You opened this page directly, so it runs as a <strong>play-money demo</strong>: identical paytable and
                 identical draw, funded by an in-page balance. Inside chain.wtf the same button opens a real session.
               </p>
             )}
-            {error && <p className="kl-error">{error}</p>}
           </div>
+        </div>
 
+        {/* ------------------------------------------------------- lower */}
+        <section className="kl-lower">
           <div className="kl-panel">
             <div className="kl-panel-head">
-              <span className="kl-label">This cabinet</span>
-              <span className="kl-mono">up to ×{topMultiplier(cabinet)}</span>
+              <span className="kl-label">Paytable · {cabinet.name}</span>
+              <span className="kl-mono">RTP {(DECLARED_RTP_PPM / 10_000).toFixed(2)}%</span>
             </div>
             <Paytable cabinet={cabinet} />
           </div>
@@ -500,20 +558,20 @@ export function App() {
                   >
                     <span className={`kl-charm-dot t${charm.tier}`} />
                     <span className="kl-charm-name">{owned ? charm.prize : '· · ·'}</span>
-                    <span className="kl-charm-cab">{count > 1 ? `${cab.name} ×${count}` : cab.name}</span>
+                    <span className="kl-charm-cab">{count > 1 ? `×${count}` : ''}</span>
                   </div>
                 );
               })}
             </div>
             <p className="kl-note">
-              Prizes you actually pull are kept on the shelf in this browser. Cosmetic only — the shelf never changes a
+              Charms you actually pull stay on this shelf in your browser. Cosmetic only — the shelf never changes a
               payout, so it cannot touch the RTP.
             </p>
           </div>
 
           <div className="kl-panel kl-stats">
             <div>
-              <span className="kl-label">Pulls logged here</span>
+              <span className="kl-label">Pulls</span>
               <strong>{history.length}</strong>
             </div>
             <div>
@@ -528,7 +586,7 @@ export function App() {
               <span className="kl-label">Declared RTP</span>
               <strong>{(DECLARED_RTP_PPM / 10_000).toFixed(2)}%</strong>
             </div>
-            <div>
+            <div className="kl-stats-strip">
               <span className="kl-label">Last 12</span>
               <span className="kl-strip">
                 {history.slice(0, 12).map((h, i) => (
@@ -537,17 +595,14 @@ export function App() {
               </span>
             </div>
           </div>
-        </aside>
+        </section>
       </main>
 
       <footer className="kl-foot">
         <span>
-          RTP 96.00% on all three cabinets · outcomes from Chain&rsquo;s VRF, settled by{' '}
-          <code>KlabakGame.sol</code>
+          RTP 96.00% on all three cabinets · outcomes from Chain&rsquo;s VRF, settled by <code>KlabakGame.sol</code>
         </span>
-        <span className="kl-foot-right">
-          {mode === 'hosted' ? 'session live' : 'demo mode — no real wagering'}
-        </span>
+        <span className="kl-foot-right">{mode === 'hosted' ? 'session live' : 'demo mode — no real wagering'}</span>
       </footer>
     </div>
   );
