@@ -110,6 +110,12 @@ export function ClawMachine({
 
   const slipped = phase === 'settled' && outcomeTier !== null && isSlip(cabinet, outcomeTier);
   const won = phase === 'settled' && outcomeTier !== null && !isSlip(cabinet, outcomeTier);
+  /**
+   * Only the cabinet's own top rung is the jackpot. Lighting the JACKPOT plate
+   * for a x1.50 grip would tell the player they hit a jackpot every time they
+   * won, which is how a truthful paytable turns into a lie on the artwork.
+   */
+  const isJackpot = won && outcomeTier === cabinet.tiers.length - 1;
   const inFlight = phase !== 'idle' && phase !== 'settled';
   const shell = CABINET_SHELL[cabinetId % CABINET_SHELL.length];
   const topX = (cabinet.tiers[cabinet.tiers.length - 1].multiplier / 100).toFixed(2).replace(/\.00$/, '');
@@ -266,7 +272,7 @@ export function ClawMachine({
           <rect x="60" y="282" width="170" height="30" rx="7" />
           <text x="145" y="302">TILT</text>
         </g>
-        <g className={`kl-plate ${won ? 'jackpot-on' : ''}`}>
+        <g className={`kl-plate ${isJackpot ? 'jackpot-on' : ''}`}>
           <rect x="650" y="282" width="170" height="30" rx="7" />
           <text x="735" y="302">JACKPOT ×{Math.round(cabinet.tiers[cabinet.tiers.length - 1].multiplier / 100)}</text>
         </g>

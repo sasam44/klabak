@@ -29,6 +29,13 @@ async def main():
                 if await pg.locator(".kl-banner.win").count():
                     txt = await pg.inner_text(".kl-banner")
                     await pg.wait_for_timeout(800)
+                    # A win overlay may be covering the glass right now; the card
+                    # wants the cabinet itself, so let the overlay finish first.
+                    for _ in range(30):
+                        if not await pg.locator(".kl-win").count():
+                            break
+                        await pg.wait_for_timeout(200)
+                    await pg.wait_for_timeout(300)
                     el = pg.locator(".kl-machine")
                     box = await el.bounding_box()
                     print(f"menang: {txt.replace(chr(10),' | ')}  stage {box['width']:.0f}x{box['height']:.0f}")

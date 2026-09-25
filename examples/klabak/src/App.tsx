@@ -338,6 +338,7 @@ export function App() {
       multiplier: tierRow.multiplier / 100,
       payout,
       isDemo: lastRound.kind === 'demo',
+      isJackpot: tierRow.multiplier === cab.tiers[cab.tiers.length - 1].multiplier,
     };
   }, [lastRound]);
 
@@ -480,6 +481,7 @@ export function App() {
               multiplier={result.multiplier}
               prize={result.prize}
               payoutText={`${formatUnits(result.payout, decimals)} ${symbol}`}
+              isJackpot={result.isJackpot}
               onDismiss={() => setCelebrate(false)}
             />
           )}
@@ -610,8 +612,8 @@ export function App() {
               <div className="kl-banner idle">
                 <strong>{cabinet.name}</strong>
                 <span>
-                  Click a column to place the claw, then pull. Space also pulls. {topMultiplier(cabinet)}× is this
-                  cabinet&rsquo;s top prize.
+                  All six capsules are identical — the chain draws one outcome per pull. Click a column to place the
+                  claw, then pull, or press Space. {topMultiplier(cabinet)}× is this cabinet&rsquo;s jackpot.
                 </span>
               </div>
             )}

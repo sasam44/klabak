@@ -26,6 +26,7 @@
     "verify:rtp": "node tools/verify-declared-rtp.mjs",
     "verify:rounds": "node tools/verify-rounds.mjs",
     "verify:math": "python3 math/generate.py --check",
+    "verify:demo": "tsx tools/check-demo-draw.ts 200000",
     "verify:simulate": "node tools/simulate-rtp.mjs"
   },
   "dependencies": {

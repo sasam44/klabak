@@ -133,6 +133,11 @@ h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; font-weight: 650; }
 .kl-plate.jackpot-on rect { fill: rgba(255, 205, 107, 0.16); stroke: var(--hot); }
 .kl-plate.jackpot-on text { fill: var(--hot); }
 .kl-plate.jackpot-on { animation: blink 0.4s steps(2) 6; }
+/* a plain grip is still a win: the coin plate and the bulbs react, the jackpot
+   plate stays dark unless the top rung really landed */
+.kl-cabinet.is-win .kl-plate-coin rect { stroke: var(--hot); }
+.kl-cabinet.is-win .kl-plate-coin text { fill: var(--hot); }
+.kl-cabinet.is-win .kl-bulb { animation-duration: 0.85s; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
 /* aim strip: one invisible button per column, over the case */

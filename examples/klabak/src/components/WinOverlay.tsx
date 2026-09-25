@@ -14,11 +14,13 @@ export type WinOverlayProps = {
   prize: string;
   /** Already-formatted payout, exactly as the banner prints it. */
   payoutText: string;
+  /** True when the round hit this cabinet's top rung — its jackpot. */
+  isJackpot: boolean;
   onDismiss: () => void;
 };
 
-function title(multiplier: number): string {
-  if (multiplier >= 20) return 'JACKPOT';
+function title(multiplier: number, isJackpot: boolean): string {
+  if (isJackpot) return 'JACKPOT';
   if (multiplier >= 6) return 'MEGA WIN';
   return 'BIG WIN';
 }
@@ -37,13 +39,13 @@ const SPARKS = Array.from({ length: 12 }, (_, i) => {
   };
 });
 
-export function WinOverlay({ multiplier, prize, payoutText, onDismiss }: WinOverlayProps) {
+export function WinOverlay({ multiplier, prize, payoutText, isJackpot, onDismiss }: WinOverlayProps) {
   return (
     <button
       type="button"
       className="kl-win"
       onClick={onDismiss}
-      aria-label={`${title(multiplier)}: ${prize} at ${format(multiplier)}`}
+      aria-label={`${title(multiplier, isJackpot)}: ${prize} at ${format(multiplier)}`}
     >
       <span className="kl-win-rays" aria-hidden="true" />
       <span className="kl-win-sparks" aria-hidden="true">
@@ -52,7 +54,7 @@ export function WinOverlay({ multiplier, prize, payoutText, onDismiss }: WinOver
         ))}
       </span>
       <span className="kl-win-card">
-        <span className="kl-win-title">{title(multiplier)}</span>
+        <span className="kl-win-title">{title(multiplier, isJackpot)}</span>
         <strong className="kl-win-mult">{format(multiplier)}</strong>
         <span className="kl-win-prize">{prize}</span>
         <span className="kl-win-payout">+{payoutText}</span>
