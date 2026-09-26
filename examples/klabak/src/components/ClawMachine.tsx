@@ -256,32 +256,21 @@ export function ClawMachine({
         {/* -------------------------------------------------------- rail */}
         <rect x="44" y={RAIL.y} width="792" height={RAIL.h} rx="3" fill="url(#rail)" />
         <g className="kl-claw-x" style={{ transform: `translateX(${clawX}px)` }}>
-          <rect x="-18" y={RAIL.y - 6} width="36" height="18" rx="6" fill="#8f94b8" />
-          <rect x="-11" y={RAIL.y - 10} width="22" height="6" rx="3" fill="#c3c8e6" opacity="0.75" />
+          {/* narrow carriage only: the claw itself is the illustrated sprite, so
+              it reads as a real gripper against the painted cabinet */}
+          <rect x="-13" y={RAIL.y - 5} width="26" height="15" rx="5" fill="#6d7295" />
+          <rect x="-8" y={RAIL.y - 8} width="16" height="4" rx="2" fill="#c3c8e6" opacity="0.55" />
         </g>
         <g className="kl-claw" style={{ transform: `translate(${clawX}px, ${clawY}px)` }}>
-          <line x1="0" y1={RAIL.y + RAIL.h - clawY} x2="0" y2="-16" stroke="#aeb4d6" strokeWidth="1.8" />
-          <rect x="-26" y="-18" width="52" height="10" rx="5" fill="#dfe3ff" opacity="0.7" />
-          <rect x="-23" y="-10" width="46" height="15" rx="6" fill="#b9bfe0" />
-          <circle cx="0" cy="-2" r="4" fill="#8f94b8" />
-          {[-1, 1].map(side => (
-            <g key={side}>
-              <circle cx={side * 13} cy="0" r="4.6" fill="#8f94b8" />
-              <path
-                d={
-                  gripperOpen
-                    ? `M${side * 12} 2 C ${side * 24} 14, ${side * 27} 28, ${side * 26} 44`
-                    : `M${side * 12} 2 C ${side * 19} 14, ${side * 14} 28, ${side * 8} 44`
-                }
-                stroke="#e6e9ff"
-                strokeWidth="5"
-                fill="none"
-                strokeLinecap="round"
-                className="kl-prong"
-              />
-            </g>
-          ))}
-          <path d={gripperOpen ? 'M0 6 L0 34' : 'M0 6 L0 28'} stroke="#9aa0c4" strokeWidth="2.8" strokeLinecap="round" />
+          <line x1="0" y1={RAIL.y + RAIL.h - clawY} x2="0" y2="-20" stroke="#7d82a8" strokeWidth="1.4" />
+          <image
+            href="/art/claw.webp"
+            x={-30}
+            y={-24}
+            width={60}
+            height={76}
+            className={`kl-claw-art ${gripperOpen ? 'open' : 'closed'}`}
+          />
           {holding && (
             <g transform="translate(0 68)" className={`kl-held ${phase === 'dumping' ? 'dropping' : ''}`}>
               <CapsuleSprite shell={heldShell} scale={0.94} />
