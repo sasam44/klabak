@@ -53,24 +53,24 @@ h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; font-weight: 650; }
 .kl-app {
   width: min(100%, calc(var(--shell) + 32px));
   margin: 0 auto;
-  padding: 14px 16px 0;
+  padding: 8px 14px 0;
   display: flex;
   flex-direction: column;
   min-height: 100%;
 }
 
 .kl-top {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 2px 2px 10px; flex-wrap: wrap;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 0 2px 6px; flex-wrap: wrap;
 }
-.kl-brand { display: flex; align-items: center; gap: 11px; }
-.kl-mark { width: 27px; height: 27px; color: var(--hot); flex: none; }
-.kl-sub { display: block; font-size: 10.5px; color: var(--ink-faint); letter-spacing: 0.13em; text-transform: uppercase; }
+.kl-brand { display: flex; align-items: center; gap: 10px; }
+.kl-mark { width: 24px; height: 24px; color: var(--hot); flex: none; }
+.kl-sub { display: block; font-size: 10px; color: var(--ink-faint); letter-spacing: 0.12em; text-transform: uppercase; }
 .kl-top-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 
 .kl-mode {
-  font-family: var(--mono); font-size: 10px; letter-spacing: 0.13em;
-  border: 1px solid var(--panel-line); border-radius: 999px; padding: 5px 11px; color: var(--ink-dim);
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em;
+  border: 1px solid var(--panel-line); border-radius: 999px; padding: 4px 10px; color: var(--ink-dim);
   white-space: nowrap;
 }
 .kl-mode.hosted { color: var(--good); border-color: rgba(95, 208, 197, 0.5); }
@@ -78,7 +78,7 @@ h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; font-weight: 650; }
 
 .kl-ghost {
   background: transparent; color: var(--ink-dim); border: 1px solid var(--panel-line);
-  border-radius: 8px; padding: 7px 11px; font-size: 11.5px; font-family: var(--sans); cursor: pointer;
+  border-radius: 8px; padding: 6px 10px; font-size: 11px; font-family: var(--sans); cursor: pointer;
   transition: color 0.18s, border-color 0.18s, background 0.18s;
 }
 .kl-ghost:hover:not(:disabled) { color: var(--ink); border-color: rgba(244, 241, 255, 0.28); }
@@ -88,19 +88,25 @@ h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; font-weight: 650; }
 .kl-main { flex: 1; }
 
 /* ---------------------------------------------------------------- cabinet */
-/* The case is a 2.44:1 rectangle, so capping its width also caps its height:
+/* The case is a 1.56:1 rectangle, so capping its width also caps its height:
    on a short screen the whole machine shrinks instead of pushing the deck
    below the fold. No zooming out required. */
 .kl-machine {
   position: relative;
-  max-width: clamp(520px, calc((100vh - var(--deck)) * 2.44), var(--shell));
+  max-width: clamp(420px, calc((100vh - 280px) * 1.558), 580px);
   margin: 0 auto;
 }
 .kl-cabinet { position: relative; }
 .kl-cabinet svg { width: 100%; height: auto; display: block; }
 
-.kl-bulb { animation: bulb 1.6s ease-in-out infinite; }
-@keyframes bulb { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+.kl-bulb {
+  filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.85));
+  animation: bulb 1.8s ease-in-out infinite;
+}
+@keyframes bulb {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; filter: drop-shadow(0 0 8px rgba(255, 230, 100, 1)); }
+}
 .kl-glass { animation: sheen 6s ease-in-out infinite; pointer-events: none; }
 @keyframes sheen { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.85; } }
 
@@ -449,11 +455,52 @@ h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; font-weight: 650; }
    cabinet is waiting, and the prize it actually paid once a round settles. The
    marquee plate can never be the only thing a player reads.
    --------------------------------------------------------------------------- */
-.kl-plate kl-plate-coin {}
-.kl-plate.readout-win rect { fill: rgba(255, 205, 107, 0.16); stroke: var(--hot); }
-.kl-plate.readout-win text { fill: #ffe1a4; letter-spacing: 0.06em; font-size: 12.5px; font-weight: 600; }
-.kl-plate.readout-slip rect { fill: rgba(255, 122, 138, 0.12); stroke: var(--bad); }
-.kl-plate.readout-slip text { fill: #ffb0ba; letter-spacing: 0.14em; font-size: 12.5px; }
+.kl-plate-marquee .kl-plate-rect {
+  fill: rgba(246, 236, 210, 0.95);
+  stroke: #c59b4c;
+  stroke-width: 1.5;
+}
+.kl-plate-marquee .kl-plate-text {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  fill: #2c2214;
+  text-anchor: middle;
+}
+.kl-plate-marquee.readout-win .kl-plate-rect {
+  fill: #fff7d6;
+  stroke: #ff9d00;
+  filter: drop-shadow(0 0 6px rgba(255, 181, 69, 0.6));
+}
+.kl-plate-marquee.readout-win .kl-plate-text {
+  fill: #a25200;
+}
+.kl-plate-marquee.readout-slip .kl-plate-rect {
+  fill: #fcedee;
+  stroke: #ff7a8a;
+}
+.kl-plate-marquee.readout-slip .kl-plate-text {
+  fill: #a02030;
+}
+.kl-plate-marquee.jackpot-on .kl-plate-rect {
+  fill: #ffe89e;
+  stroke: #ff7700;
+  filter: drop-shadow(0 0 12px rgba(255, 205, 107, 0.9));
+  animation: blink 0.35s steps(2) infinite;
+}
+.kl-plate-marquee.jackpot-on .kl-plate-text {
+  fill: #803000;
+  font-weight: 800;
+}
+.kl-plate-marquee.tilt-on .kl-plate-rect {
+  fill: #ffd4d8;
+  stroke: #d82038;
+  animation: blink 0.4s steps(2) 5;
+}
+.kl-plate-marquee.tilt-on .kl-plate-text {
+  fill: #a01020;
+}
 
 /* the illustrated gripper: opens and closes by scaling, the way the vector
    prongs used to bend */
